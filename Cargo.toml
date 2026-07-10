@@ -33,7 +33,7 @@ clap = { version = "^4", features = ["derive"] }
 # PTY
 portable-pty = "^0.8"
 # VT100 parsing
-vte = "^0.13"
+vte = "^0.15"
 # Terminal rendering (PNG)
 image = "^0.25"
 ab_glyph = "^0.2"
