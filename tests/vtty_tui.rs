@@ -32,14 +32,7 @@ use kou::VttyManager;
 async fn cat_echo_snapshot() {
     let mgr = VttyManager::new();
     let info = mgr
-        .launch(
-            "cat",
-            None,
-            &[],
-            80,
-            24,
-            Some("vtty_tui_cat"),
-        )
+        .launch("cat", None, &[], 80, 24, Some("vtty_tui_cat"))
         .await
         .expect("launch cat");
 
@@ -47,7 +40,9 @@ async fn cat_echo_snapshot() {
     mgr.send_text(&info.id, "hello from kou vtty harness")
         .await
         .expect("send_text");
-    mgr.send_keys(&info.id, "ENTER").await.expect("send_keys ENTER");
+    mgr.send_keys(&info.id, "ENTER")
+        .await
+        .expect("send_keys ENTER");
 
     // Wait for the echo to land in the screen.
     kou_wait_for_text(&mgr, &info.id, "hello from kou", 5.0).await;
@@ -69,14 +64,7 @@ async fn shell_colour_snapshot() {
     // coloured banner then exits, leaving its output in the screen.
     let banner = "printf '\\\\x1b[1;36mkou\\\\x1b[0m \\\\x1b[1;33mvtty\\\\x1b[0m \\\\x1b[2;37mcolour snapshot test\\\\x1b[0m\\\\n'";
     let info = mgr
-        .launch(
-            "sh",
-            None,
-            &[],
-            80,
-            24,
-            Some("vtty_tui_shell"),
-        )
+        .launch("sh", None, &[], 80, 24, Some("vtty_tui_shell"))
         .await
         .expect("launch sh");
     // sh with no -c reads stdin; type the banner then exit.

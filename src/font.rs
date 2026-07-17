@@ -20,6 +20,8 @@
 //!
 //! Knobs: `KOU_FONT_MIRROR`, `KOU_DOWNLOAD_PROXY`, `KOU_DOWNLOAD_TIMEOUT_SECS`,
 //! `KOU_SKIP_FONT_FETCH`, `KOU_FONT_PRIMARY`, `KOU_FONT_CJK`.
+//! Proxy detection also checks `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY`
+//! as fallbacks when `KOU_DOWNLOAD_PROXY` is not set.
 
 use std::path::{Path, PathBuf};
 
@@ -225,6 +227,28 @@ pub fn resolve_family(family: FontFamily) -> Option<PathBuf> {
     None
 }
 
+/// Detect HTTP proxy from environment variables.
+///
+/// Checks `KOU_DOWNLOAD_PROXY`, `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` in
+/// order, returning the first non-empty value.
+#[cfg(feature = "font-fetch")]
+fn detect_proxy() -> Option<String> {
+    for var in &[
+        "KOU_DOWNLOAD_PROXY",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+    ] {
+        if let Ok(val) = std::env::var(var) {
+            let val = val.trim().to_string();
+            if !val.is_empty() {
+                return Some(val);
+            }
+        }
+    }
+    None
+}
+
 #[cfg(feature = "font-fetch")]
 fn download(family: FontFamily, dest: &Path) -> anyhow::Result<()> {
     if let Err(e) = rustls::crypto::ring::default_provider().install_default() {
@@ -237,15 +261,12 @@ fn download(family: FontFamily, dest: &Path) -> anyhow::Result<()> {
         .map(std::time::Duration::from_secs)
         .unwrap_or(std::time::Duration::from_secs(120));
     let mut builder = reqwest::blocking::Client::builder().timeout(timeout);
-    if let Ok(proxy) = std::env::var("KOU_DOWNLOAD_PROXY") {
-        let proxy = proxy.trim();
-        if !proxy.is_empty() {
-            eprintln!("[kou] using font download proxy {proxy}");
-            builder = builder.proxy(
-                reqwest::Proxy::all(proxy)
-                    .map_err(|e| anyhow::anyhow!("invalid KOU_DOWNLOAD_PROXY {proxy:?}: {e}"))?,
-            );
-        }
+    if let Some(proxy) = detect_proxy() {
+        eprintln!("[kou] using font download proxy {proxy}");
+        builder = builder.proxy(
+            reqwest::Proxy::all(&proxy)
+                .map_err(|e| anyhow::anyhow!("invalid proxy {proxy:?}: {e}"))?,
+        );
     }
     let client = builder.build()?;
     let url = family.source_url();
@@ -519,14 +540,12 @@ async fn download_async(family: FontFamily, dest: &Path) -> anyhow::Result<()> {
         .map(std::time::Duration::from_secs)
         .unwrap_or(std::time::Duration::from_secs(120));
     let mut builder = reqwest::Client::builder().timeout(timeout);
-    if let Ok(proxy) = std::env::var("KOU_DOWNLOAD_PROXY") {
-        let proxy = proxy.trim();
-        if !proxy.is_empty() {
-            builder = builder.proxy(
-                reqwest::Proxy::all(proxy)
-                    .map_err(|e| anyhow::anyhow!("invalid KOU_DOWNLOAD_PROXY {proxy:?}: {e}"))?,
-            );
-        }
+    if let Some(proxy) = detect_proxy() {
+        eprintln!("[kou] using font download proxy {proxy}");
+        builder = builder.proxy(
+            reqwest::Proxy::all(&proxy)
+                .map_err(|e| anyhow::anyhow!("invalid proxy {proxy:?}: {e}"))?,
+        );
     }
     let client = builder.build()?;
     let url = family.source_url();

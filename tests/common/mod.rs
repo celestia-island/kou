@@ -46,6 +46,7 @@ pub fn fonts() -> FontCache {
 ///   (use this to bless an intentional rendering change).
 /// - Otherwise the two are diffed pixel-by-pixel; differing beyond
 ///   [`DIFF_THRESHOLD`] fails the test with guidance on how to accept.
+#[allow(dead_code)]
 pub fn assert_matches(screen: &Screen, theme: &str, name: &str) {
     let png = kou::render::render_png_supersampled(screen, &fonts(), 32.0, 3, theme_by_name(theme))
         .expect("render");
@@ -118,7 +119,8 @@ pub async fn assert_vtty_screenshot(
     name: &str,
 ) -> anyhow::Result<()> {
     let screen = mgr.screen(session_id).await?;
-    let png = kou::render::render_png_supersampled(&screen, &fonts(), 32.0, 3, theme_by_name(theme))?;
+    let png =
+        kou::render::render_png_supersampled(&screen, &fonts(), 32.0, 3, theme_by_name(theme))?;
     compare_against_baseline(&png, name);
     Ok(())
 }
