@@ -37,5 +37,13 @@ jobs:
 
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
-      - run: cargo test --all-features
+
+      # Split the test run into two groups:
+      #   1. Pure-render tests (no PTY, no child process) — fast, hermetic.
+      #   2. PTY-driven tests — launch real shells, need Unix + a PTY.
+      # Both share the same pinned-font cache prepared above.
+      - name: Pure-render tests (lib + snapshots + kitty + mcp handshake)
+        run: cargo test --all-features --lib --test snapshots --test kitty_e2e --test mcp_smoke
+      - name: PTY-driven tests (unix only)
+        run: cargo test --all-features --test smoke --test vtty_tui
 

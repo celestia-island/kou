@@ -1,16 +1,45 @@
 # kou — virtual terminal automation.
 
 set shell := ["bash", "-c"]
+<<<<<<< HEAD
 # On Windows just resolves recipe shebangs through the shell named here; without
 # it just falls back to `cygpath`, which Git for Windows does not put on PATH,
 # so every shebang recipe fails with "could not find cygpath executable".
 set windows-shell := ["bash.exe", "-c"]
 # `set lists` enables which() (used by the imported celestia-devtools.just);
 # `set unstable` gates it.
+=======
+set windows-shell := ["bash.exe", "-c"]
+>>>>>>> origin/dev
 set unstable
 set lists
 
-import "./celestia-devtools.just"
+# Shared celestia-devtools recipes — NOT in git. Stage with: just fetch.
+# `import?` silently skips when absent, so this justfile parses pre-fetch.
+import? "./.just/git-bash-interop.just"
+import? "./.just/celestia-devtools.just"
+
+# Stage shared celestia-devtools recipes into .just/ (gitignored).
+# Source order: explicit URL arg → local pip bundle (offline) → GitHub raw.
+# curl honors HTTP_PROXY/HTTPS_PROXY/ALL_PROXY env vars automatically.
+[script('bash')]
+fetch URL='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out=.just/celestia-devtools.just
+    mkdir -p .just
+    if [ -n "{{URL}}" ]; then
+      echo "[fetch] {{URL}} -> $out"
+      curl -fsSL "{{URL}}" -o "$out"
+    elif command -v celestia-devtools >/dev/null 2>&1; then
+      src=$(celestia-devtools include-path)
+      echo "[fetch] local bundle ($src) -> $out"
+      cp "$src" "$out"
+    else
+      echo "[fetch] github raw -> $out"
+      curl -fsSL "https://raw.githubusercontent.com/celestia-island/celestia-devtools/dev/src/celestia_devtools/common.just" -o "$out"
+    fi
+    echo "[fetch] wrote $out"
 
 default:
     @just --list

@@ -1,128 +1,22 @@
 //! Snapshot regression tests: feed raw ANSI text to a `Screen`, render to PNG,
 //! and compare against a committed baseline under `res/`.
 //!
-//! # Why pixel-diff, not just "render and eyeball"
+//! The shared infrastructure (font pinning, pixel diff, baseline blessing)
+//! lives in [`common`]. See that module's docs for the determinism contract
+//! and how to accept an intentional rendering change.
 //!
-//! These baselines are a **rendering regression alarm**. If a code change
-//! (a new VT100 parser path, a render refactor, a font-metrics shift) silently
-//! breaks what used to render correctly, the per-pixel comparison fails and
-//! points at the culprit change. Two ways to resolve a failure:
-//!
-//! 1. **It's a real regression** → fix the code until the render matches again.
-//! 2. **It's an intended change** (you deliberately altered rendering) → accept
-//!    the new image as the baseline:
-//!    ```bash
-//!    KOU_ACCEPT_SNAPSHOTS=1 cargo test --test snapshots
-//!    ```
-//!    then commit the updated `res/*.png`.
-//!
-//! # Font determinism (the whole scheme hinges on this)
-//!
-//! The renderer is pixel-deterministic *given the same fonts* — `ab_glyph`
-//! rasterisation and Lanczos3 downscale have no hidden state. The only source
-//! of cross-machine drift is the **font files**. So tests MUST NOT use
-//! `FontCache::from_system_fonts` (which picks Consolas on Windows, DejaVu on
-//! Linux, Menlo on macOS — guaranteeing spurious diffs).
-//!
-//! Instead [`fonts`] loads a fixed `FontSet` (FiraCode primary + Source Han Sans
-//! SC fallback) via the same resolution path the library uses in production
-//! (`KOU_FONT_PATH` → kou cache → fetch). Tests run with `KOU_SKIP_FONT_FETCH=1`
-//! so they never hit the network; the cache must be pre-populated:
-//!   - locally: run any kou example once, or point `KOU_FONT_PATH`/`KOU_FONT_CJK_PATH`
-//!     at the two files;
-//!   - in CI: the workflow downloads a pinned `fonts-v1` asset from the GitHub
-//!     Release into the kou cache before `cargo test`.
+//! These are **pure-rendering** alarms — no PTY, no child process. They feed
+//! static ANSI into a `Screen` directly. For tests that drive a real TUI via
+//! a PTY, see `tests/vtty_tui.rs`.
 
+mod common;
+
+use common::assert_matches;
+use kou::Screen;
+
+// Needed for `base64::engine::general_purpose::STANDARD.encode(...)` calls in
+// the inline-image tests below.
 use base64::Engine as _;
-use image::RgbaImage;
-use kou::{FontCache, FontSet, Screen, theme_by_name};
-
-/// Maximum fraction of pixels allowed to differ before a snapshot is flagged
-/// as a regression. 0.1% tolerates PNG re-encoding noise while still catching
-/// any meaningful glyph/layout change.
-const DIFF_THRESHOLD: f64 = 0.001;
-
-/// Load the **fixed** font set used by every snapshot. See the module docs for
-/// why this must not use system fonts.
-fn fonts() -> FontCache {
-    FontCache::load(&FontSet::from_env(), 32.0 * 3.0)
-}
-
-/// Render `screen` in `theme` and compare against the baseline `res/{name}.png`.
-///
-/// - With `KOU_ACCEPT_SNAPSHOTS` set, the rendered image replaces the baseline
-///   (use this to bless an intentional rendering change).
-/// - Otherwise the two are diffed pixel-by-pixel; differing beyond
-///   [`DIFF_THRESHOLD`] fails the test with guidance on how to accept.
-fn assert_matches(screen: &Screen, theme: &str, name: &str) {
-    let png = kou::render::render_png_supersampled(screen, &fonts(), 32.0, 3, theme_by_name(theme))
-        .expect("render");
-    let baseline = std::path::Path::new("res").join(format!("{name}.png"));
-
-    if std::env::var_os("KOU_ACCEPT_SNAPSHOTS").is_some() {
-        std::fs::create_dir_all(baseline.parent().unwrap()).unwrap();
-        std::fs::write(&baseline, &png).unwrap();
-        eprintln!("  accepted {baseline:?}");
-        return;
-    }
-
-    let new = image::load_from_memory(&png)
-        .expect("decode rendered png")
-        .to_rgba8();
-    let base_bytes = std::fs::read(&baseline).unwrap_or_else(|e| {
-        panic!(
-            "baseline {baseline:?} missing ({e}); generate it with \
-             `KOU_ACCEPT_SNAPSHOTS=1 cargo test --test snapshots`"
-        )
-    });
-    let base = image::load_from_memory(&base_bytes)
-        .expect("decode baseline png")
-        .to_rgba8();
-
-    assert_eq!(
-        base.dimensions(),
-        new.dimensions(),
-        "{name}: dimensions changed ({}x{} -> {}x{}) — screen geometry or font metrics drifted",
-        base.width(),
-        base.height(),
-        new.width(),
-        new.height(),
-    );
-
-    let (ratio, max_delta) = pixel_diff(&base, &new);
-    let pct = format!("{:.3}%", ratio * 100.0);
-    assert!(
-        ratio < DIFF_THRESHOLD,
-        "{name}: {pct} of pixels differ (max channel delta {max_delta}) — \
-         rendering regression? If this change is intended, bless it with \
-         `KOU_ACCEPT_SNAPSHOTS=1 cargo test --test snapshots {name}`",
-    );
-}
-
-/// Fraction of differing pixels and the largest single-channel delta between
-/// two equally-sized RGBA images. A pixel "differs" when any channel differs
-/// by more than a small tolerance (anti-aliasing edges can shift by ±1).
-fn pixel_diff(base: &RgbaImage, other: &RgbaImage) -> (f64, u8) {
-    debug_assert_eq!(base.dimensions(), other.dimensions());
-    let (w, h) = base.dimensions();
-    let total = (w as u64) * (h as u64);
-    let mut differing = 0u64;
-    let mut max_delta = 0u8;
-    for (a, b) in base.pixels().zip(other.pixels()) {
-        let dr = a[0].abs_diff(b[0]);
-        let dg = a[1].abs_diff(b[1]);
-        let db = a[2].abs_diff(b[2]);
-        let da = a[3].abs_diff(b[3]);
-        let local = dr.max(dg).max(db).max(da);
-        max_delta = max_delta.max(local);
-        // Ignore near-zero shifts (≤2 per channel) so 1px anti-alias jitter
-        // doesn't trip the alarm.
-        if local > 2 {
-            differing += 1;
-        }
-    }
-    (differing as f64 / total as f64, max_delta)
-}
 
 // ── 1. Neofetch showcase (120×60) ───────────────────────────────
 

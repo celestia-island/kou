@@ -2,6 +2,24 @@
 
 > 本文件随发布元数据补全于 **2026-07-04** 刷新，记录项目当前状态、近期进展与后续计划。
 
+## Refresh log 2026-07-14
+
+- **当前分支**：`dev` · 领先 `origin/dev` 0 commits · 工作区有 5 项 dirty
+- **最近提交**：`🔧 Pin script recipes to the resolved Git Bash to survive WSL shadowing.` (`4ad345b`)
+- **未提交改动**：
+  - `M .github/workflows/checks.yml`
+  - `M Cargo.toml`
+  - `M tests/snapshots.rs`
+  - `?? tests/common/`（新增测试公共模块）
+  - `?? tests/vtty_tui.rs`（新增 vtty_tui 测试）
+- **后续动作**：
+  1. 提交 `tests/common/` + `tests/vtty_tui.rs` 新测试基础设施，并跑 `cargo test --workspace` 全绿。
+  2. 复核 `Cargo.toml` 改动（依赖 / features）— 与新增 vtty_tui 测试目标保持一致。
+  3. 把 `tests/snapshots.rs` 与 `.github/workflows/checks.yml` 的修改一起合并提交。
+  - 全生态共性：跨仓 `[patch]` 收敛到 `~/.cargo/config.toml`（见 entelecheia/PLAN.md §6 跨仓依赖约定）。
+  - 顶层 `patches/` 长期方案。
+- **跨仓依赖**：被 `kei` 网关模式直接调用 vtty；与 `aris` 共享终端协议（kitty / iTerm2 / sixel）；被 `entelecheia` 工作区引用。
+
 ## 1. 项目概述
 
 - **名称**：`kou`
