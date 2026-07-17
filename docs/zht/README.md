@@ -146,3 +146,28 @@ cargo test --all-features
 ## 授權條款
 
 SySL-1.0（Synthetic Source License）。詳見 [LICENSE](https://sysl.celestia.world)。
+
+## MCP Server Deployment
+
+> (English section — translation pending)
+
+For production or long-running MCP deployments (e.g. with opencode, Claude Desktop, or other MCP clients), we recommend using an **auto-restart wrapper** to keep the MCP server alive across updates and transient failures without interrupting the client session.
+
+### Recommended launcher script
+
+#!/bin/bash
+while true; do
+  /path/to/kou mcp
+  sleep 0.2
+done
+
+### How it works
+
+1. The wrapper runs the MCP server in a `while true` loop.
+2. If the server process exits, the wrapper restarts it within 0.2 seconds.
+3. The MCP client detects the reconnect and continues without data loss.
+4. To restart after updating the binary: `kill $(pgrep -f "kou mcp" | head -1)`
+
+### Integration with malkuth
+
+For fully managed deployment, use [malkuth](https://github.com/celestia-island/malkuth) as a supervisor watching the binary for changes and performing rolling restarts.
