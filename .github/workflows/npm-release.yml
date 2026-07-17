@@ -45,7 +45,7 @@ jobs:
           - { os: macos-latest,       target: x86_64-apple-darwin,       suffix: -darwin-x64 }
           - { os: windows-latest, target: x86_64-pc-windows-msvc,    suffix: -win32-x64 }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -60,7 +60,7 @@ jobs:
         run: pip install git+https://github.com/celestia-island/celestia-devtools.git
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org/
@@ -120,7 +120,7 @@ jobs:
             --homepage "https://github.com/celestia-island/kou"
 
       - name: Upload staged subpackage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: subpackage-${{ matrix.suffix }}
           path: dist/kou${{ matrix.suffix }}
@@ -140,7 +140,7 @@ jobs:
     needs: build-subpackage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -151,7 +151,7 @@ jobs:
         run: pip install git+https://github.com/celestia-island/celestia-devtools.git
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org/

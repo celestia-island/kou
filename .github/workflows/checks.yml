@@ -12,7 +12,7 @@ jobs:
       # Tests never fetch fonts at runtime; the cache is pre-populated below.
       KOU_SKIP_FONT_FETCH: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
