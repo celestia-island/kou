@@ -185,4 +185,3 @@ done
 
 ### Integration with malkuth
 
-For fully managed deployment, use [malkuth](https://github.com/celestia-island/malkuth) as a supervisor watching the binary for changes and performing rolling restarts.
