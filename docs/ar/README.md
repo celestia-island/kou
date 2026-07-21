@@ -156,13 +156,11 @@ cargo test --all-features
 
 SySL-1.0 (Synthetic Source License). راجع [LICENSE](https://sysl.celestia.world).
 
-## MCP Server Deployment
+## نشر خادم MCP
 
-> (English section — translation pending)
+لنشر MCP في بيئات الإنتاج أو التشغيل الطويل (مثل استخدامه مع opencode أو Claude Desktop أو عملاء MCP آخرين)، نوصي باستخدام **غلاف إعادة تشغيل تلقائي** للحفاظ على تشغيل خادم MCP أثناء التحديثات والأعطال المؤقتة دون مقاطعة جلسة العميل.
 
-For production or long-running MCP deployments (e.g. with opencode, Claude Desktop, or other MCP clients), we recommend using an **auto-restart wrapper** to keep the MCP server alive across updates and transient failures without interrupting the client session.
-
-### Recommended launcher script
+### النص البرمجي للإطلاق الموصى به
 
 #!/bin/bash
 while true; do
@@ -170,12 +168,12 @@ while true; do
   sleep 0.2
 done
 
-### How it works
+### آلية العمل
 
-1. The wrapper runs the MCP server in a `while true` loop.
-2. If the server process exits, the wrapper restarts it within 0.2 seconds.
-3. The MCP client detects the reconnect and continues without data loss.
-4. To restart after updating the binary: `kill $(pgrep -f "kou mcp" | head -1)`
+1. يقوم الغلاف بتشغيل خادم MCP في حلقة `while true`.
+2. إذا خرجت عملية الخادم، يعيد الغلاف تشغيلها خلال 0.2 ثانية.
+3. يكتشف عميل MCP إعادة الاتصال ويستمر دون فقدان البيانات.
+4. لإعادة التشغيل بعد تحديث الملف الثنائي: `kill $(pgrep -f "kou mcp" | head -1)`
 
-### Integration with malkuth
+### التكامل مع malkuth
 

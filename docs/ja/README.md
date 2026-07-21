@@ -162,13 +162,11 @@ cargo test --all-features
 SySL-1.0 (Synthetic Source License)。詳細は [LICENSE](https://sysl.celestia.world) を参照
 してください。
 
-## MCP Server Deployment
+## MCPサーバーのデプロイ
 
-> (English section — translation pending)
+本番環境や長時間稼働のMCPデプロイ（例：opencode、Claude Desktop、その他のMCPクライアントと共に使用する場合）では、**自動再起動ラッパー**を使用して、クライアントセッションを中断することなく、更新や一時的な障害を通じてMCPサーバーを稼働させ続けることを推奨します。
 
-For production or long-running MCP deployments (e.g. with opencode, Claude Desktop, or other MCP clients), we recommend using an **auto-restart wrapper** to keep the MCP server alive across updates and transient failures without interrupting the client session.
-
-### Recommended launcher script
+### 推奨起動スクリプト
 
 #!/bin/bash
 while true; do
@@ -176,12 +174,12 @@ while true; do
   sleep 0.2
 done
 
-### How it works
+### 仕組み
 
-1. The wrapper runs the MCP server in a `while true` loop.
-2. If the server process exits, the wrapper restarts it within 0.2 seconds.
-3. The MCP client detects the reconnect and continues without data loss.
-4. To restart after updating the binary: `kill $(pgrep -f "kou mcp" | head -1)`
+1. ラッパーは `while true` ループでMCPサーバーを実行します。
+2. サーバープロセスが終了した場合、ラッパーは0.2秒以内に再起動します。
+3. MCPクライアントは再接続を検出し、データ損失なしで継続します。
+4. バイナリ更新後に再起動するには：`kill $(pgrep -f "kou mcp" | head -1)`
 
-### Integration with malkuth
+### malkuthとの統合
 

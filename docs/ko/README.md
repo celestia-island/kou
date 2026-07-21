@@ -160,13 +160,11 @@ cargo test --all-features
 
 SySL-1.0 (Synthetic Source License). 자세한 내용은 [LICENSE](https://sysl.celestia.world)를 참조하세요.
 
-## MCP Server Deployment
+## MCP 서버 배포
 
-> (English section — translation pending)
+프로덕션 또는 장기 실행 MCP 배포(예: opencode, Claude Desktop 또는 기타 MCP 클라이언트와 함께 사용)의 경우, **자동 재시작 래퍼**를 사용하여 클라이언트 세션을 중단하지 않고 업데이트 및 일시적 장애 상황에서 MCP 서버를 계속 실행 상태로 유지하는 것을 권장합니다.
 
-For production or long-running MCP deployments (e.g. with opencode, Claude Desktop, or other MCP clients), we recommend using an **auto-restart wrapper** to keep the MCP server alive across updates and transient failures without interrupting the client session.
-
-### Recommended launcher script
+### 권장 실행 스크립트
 
 #!/bin/bash
 while true; do
@@ -174,12 +172,12 @@ while true; do
   sleep 0.2
 done
 
-### How it works
+### 작동 방식
 
-1. The wrapper runs the MCP server in a `while true` loop.
-2. If the server process exits, the wrapper restarts it within 0.2 seconds.
-3. The MCP client detects the reconnect and continues without data loss.
-4. To restart after updating the binary: `kill $(pgrep -f "kou mcp" | head -1)`
+1. 래퍼는 `while true` 루프에서 MCP 서버를 실행합니다.
+2. 서버 프로세스가 종료되면 래퍼가 0.2초 이내에 다시 시작합니다.
+3. MCP 클라이언트가 재연결을 감지하고 데이터 손실 없이 계속 진행합니다.
+4. 바이너리 업데이트 후 재시작: `kill $(pgrep -f "kou mcp" | head -1)`
 
-### Integration with malkuth
+### malkuth와의 통합
 

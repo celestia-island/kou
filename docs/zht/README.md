@@ -147,13 +147,11 @@ cargo test --all-features
 
 SySL-1.0（Synthetic Source License）。詳見 [LICENSE](https://sysl.celestia.world)。
 
-## MCP Server Deployment
+## MCP 伺服器部署
 
-> (English section — translation pending)
+針對生產環境或長時間執行的 MCP 部署（例如與 opencode、Claude Desktop 或其他 MCP 用戶端一起使用），我們建議使用**自動重新啟動包裝器**，以便在不中斷用戶端工作階段的情況下，在更新和暫時性失敗期間保持 MCP 伺服器運作。
 
-For production or long-running MCP deployments (e.g. with opencode, Claude Desktop, or other MCP clients), we recommend using an **auto-restart wrapper** to keep the MCP server alive across updates and transient failures without interrupting the client session.
-
-### Recommended launcher script
+### 建議的啟動指令碼
 
 #!/bin/bash
 while true; do
@@ -161,12 +159,12 @@ while true; do
   sleep 0.2
 done
 
-### How it works
+### 運作方式
 
-1. The wrapper runs the MCP server in a `while true` loop.
-2. If the server process exits, the wrapper restarts it within 0.2 seconds.
-3. The MCP client detects the reconnect and continues without data loss.
-4. To restart after updating the binary: `kill $(pgrep -f "kou mcp" | head -1)`
+1. 包裝器在 `while true` 迴圈中執行 MCP 伺服器。
+2. 若伺服器程序結束，包裝器會在 0.2 秒內重新啟動它。
+3. MCP 用戶端偵測到重新連線並繼續運作，不會遺失資料。
+4. 更新二進位檔後重新啟動：`kill $(pgrep -f "kou mcp" | head -1)`
 
-### Integration with malkuth
+### 與 malkuth 整合
 
