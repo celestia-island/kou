@@ -63,4 +63,4 @@ sixel = ["dep:icy_sixel"]
 mcp = ["dep:rmcp", "dep:schemars", "tokio/io-std"]
 
 [dev-dependencies]
-serial_test = "^3"
+serial_test = "^4"
