@@ -1,13 +1,14 @@
 name: Checks
 
 on:
+  workflow_dispatch:
   push:
     branches: [master, dev]
   pull_request:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, local]
     env:
       # Tests never fetch fonts at runtime; the cache is pre-populated below.
       KOU_SKIP_FONT_FETCH: "1"
