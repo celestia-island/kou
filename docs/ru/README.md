@@ -161,13 +161,11 @@ cargo test --all-features
 
 SySL-1.0 (Synthetic Source License). См. [LICENSE](https://sysl.celestia.world).
 
-## MCP Server Deployment
+## Развёртывание MCP-сервера
 
-> (English section — translation pending)
+Для производственных или долго работающих развёртываний MCP (например, с opencode, Claude Desktop или другими MCP-клиентами) мы рекомендуем использовать **обёртку с автоматическим перезапуском**, чтобы поддерживать работу MCP-сервера при обновлениях и временных сбоях без прерывания сеанса клиента.
 
-For production or long-running MCP deployments (e.g. with opencode, Claude Desktop, or other MCP clients), we recommend using an **auto-restart wrapper** to keep the MCP server alive across updates and transient failures without interrupting the client session.
-
-### Recommended launcher script
+### Рекомендуемый скрипт запуска
 
 #!/bin/bash
 while true; do
@@ -175,12 +173,12 @@ while true; do
   sleep 0.2
 done
 
-### How it works
+### Как это работает
 
-1. The wrapper runs the MCP server in a `while true` loop.
-2. If the server process exits, the wrapper restarts it within 0.2 seconds.
-3. The MCP client detects the reconnect and continues without data loss.
-4. To restart after updating the binary: `kill $(pgrep -f "kou mcp" | head -1)`
+1. Обёртка запускает MCP-сервер в цикле `while true`.
+2. Если процесс сервера завершается, обёртка перезапускает его в течение 0,2 секунды.
+3. MCP-клиент обнаруживает переподключение и продолжает работу без потери данных.
+4. Чтобы перезапустить после обновления бинарного файла: `kill $(pgrep -f "kou mcp" | head -1)`
 
-### Integration with malkuth
+### Интеграция с malkuth
 
