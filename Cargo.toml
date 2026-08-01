@@ -38,7 +38,7 @@ vte = "^0.15"
 image = "^0.25"
 ab_glyph = "^0.2"
 # Graphics protocols (kitty / iTerm2): base64 framing.
-base64 = "^0.22"
+base64 = "^0.23"
 # East-Asian character width — CJK glyphs are double-wide on the terminal grid.
 unicode-width = "^0.2"
 # Font fetcher: reqwest without a TLS provider; we install ring below
