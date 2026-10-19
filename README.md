@@ -71,7 +71,9 @@ npx @celestia-island/kou mcp        # the MCP server (needs the mcp build)
 ```
 
 The `@celestia-island/kou` root package pulls the right platform subpackage
-(`-linux-x64` / `-darwin-arm64` / `-win32-x64`) automatically. To pin a version:
+(`-linux-x64` / `-darwin-arm64` / `-win32-x64`) automatically. The Linux
+binaries are statically linked against musl, so they run unchanged on glibc
+distributions and on Alpine/distroless hosts. To pin a version:
 
 ```bash
 npx @celestia-island/kou@0.1.0 launch bash
